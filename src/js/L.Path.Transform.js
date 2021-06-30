@@ -208,8 +208,9 @@ L.Handler.PathDrag = L.Handler.extend(
 
       // skip taps
       if (evt.type === "touchmove" && !this._path._dragMoved) {
-        var totalMouseDragDistance =
-          this._dragStartPoint.distanceTo(containerPoint);
+        var totalMouseDragDistance = this._dragStartPoint.distanceTo(
+          containerPoint
+        );
         if (totalMouseDragDistance <= this._path._map.options.tapTolerance) {
           return;
         }
@@ -1015,6 +1016,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rect = null;
     this._handlers = [];
     this._handleLine = null;
+    this._rotationIcon = null;
   },
 
   /**
@@ -1134,6 +1136,13 @@ L.Handler.PathTransform = L.Handler.extend({
       rotationOrigin,
       scaleOrigin
     );
+    this._transformPoints(
+      this._rotationIcon,
+      angle,
+      scale,
+      rotationOrigin,
+      scaleOrigin
+    );
     this._updateHandlers();
     return this;
   },
@@ -1241,7 +1250,11 @@ L.Handler.PathTransform = L.Handler.extend({
       this._handlersGroup.removeLayer(this._rotationMarker);
     }
 
-    this._handleLine = this._rotationMarker = null;
+    if (this._rotationIcon) {
+      this._handlersGroup.removeLayer(this._rotationIcon);
+    }
+
+    this._handleLine = this._rotationMarker = this._rotationIcon = null;
 
     for (var i = this._handlers.length - 1; i >= 0; i--) {
       handlersGroup.removeLayer(this._handlers[i]);
@@ -1443,6 +1456,15 @@ L.Handler.PathTransform = L.Handler.extend({
       .addTo(this._handlersGroup)
       .on("mousedown", this._onRotateStart, this);
 
+    this._rotationIcon = new L.marker(handlerPosition)
+      .setIcon(arrowsIcon)
+      .addTo(this._handlersGroup)
+      .on("mousedown", this._onRotateStart, this);
+    if (this._rotationIcon.setStyle) {
+      this._rotationIcon.setStyle({ "z-index": 1000 });
+      this._rotationIcon.setStyle({ cursor: "all-scroll" });
+    }
+
     this._rotationOrigin = new L.LatLng(
       (topPoint.lat + bottom.lat) / 2,
       (topPoint.lng + bottom.lng) / 2
@@ -1509,6 +1531,18 @@ L.Handler.PathTransform = L.Handler.extend({
       .flip();
 
     this._update();
+
+    if (
+      this.options.rotation &&
+      this._rotationIcon &&
+      this._rotationIcon.setLatLng
+    ) {
+      const latlng = new L.LatLng(pos.x, pos.y);
+      this._map.addLayer(this._rotationIcon);
+      this._rotationIcon.setLatLng(latlng);
+      this._rotationIcon.setStyle({ "z-index": 10000 });
+    }
+
     this._path.fire("rotate", { layer: this._path, rotation: this._angle });
   },
 
@@ -1605,7 +1639,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     var marker = evt.target;
     var map = this._map;
-    
+
     if (map.dragging.enabled()) {
       map.dragging.disable();
       this._mapDraggingWasEnabled = true;
@@ -1651,7 +1685,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._map.removeLayer(this._handleLine);
     this._map.removeLayer(this._rotationMarker);
-    //this._handleLine = this._rotationMarker = null;
+    this._map.removeLayer(this._rotationIcon);
   },
 
   _onScaleStandard: function (evt) {
@@ -1783,7 +1817,6 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map.addLayer(this._handleLine);
     this._map.addLayer(this._rotationMarker);
     this._makeHandlersApparent();
-
 
     this._apply();
     this._path.fire("scaleend", {

@@ -943,6 +943,7 @@
       this._rect = null;
       this._handlers = [];
       this._handleLine = null;
+      this._rotationIcon = null;
     },
 
     /**
@@ -1045,6 +1046,8 @@
       this._transformPoints(this._rect, angle, scale, rotationOrigin, scaleOrigin);
 
       this._transformPoints(this._handleLine, angle, scale, rotationOrigin, scaleOrigin);
+
+      this._transformPoints(this._rotationIcon, angle, scale, rotationOrigin, scaleOrigin);
 
       this._updateHandlers();
 
@@ -1165,7 +1168,11 @@
         this._handlersGroup.removeLayer(this._rotationMarker);
       }
 
-      this._handleLine = this._rotationMarker = null;
+      if (this._rotationIcon) {
+        this._handlersGroup.removeLayer(this._rotationIcon);
+      }
+
+      this._handleLine = this._rotationMarker = this._rotationIcon = null;
 
       for (var i = this._handlers.length - 1; i >= 0; i--) {
         handlersGroup.removeLayer(this._handlers[i]);
@@ -1327,6 +1334,18 @@
       this._handleLine = new L.Polyline([topPoint, handlerPosition], this.options.rotateHandleOptions).addTo(this._handlersGroup);
       var RotateHandleClass = this.options.rotateHandleClass;
       this._rotationMarker = new RotateHandleClass(handlerPosition, this.options.handlerOptions).addTo(this._handlersGroup).on("mousedown", this._onRotateStart, this);
+      this._rotationIcon = new L.marker(handlerPosition).setIcon(arrowsIcon).addTo(this._handlersGroup).on("mousedown", this._onRotateStart, this);
+
+      if (this._rotationIcon.setStyle) {
+        this._rotationIcon.setStyle({
+          "z-index": 1000
+        });
+
+        this._rotationIcon.setStyle({
+          cursor: "all-scroll"
+        });
+      }
+
       this._rotationOrigin = new L.LatLng((topPoint.lat + bottom.lat) / 2, (topPoint.lng + bottom.lng) / 2);
 
       this._handlers.push(this._rotationMarker);
@@ -1383,6 +1402,18 @@
       this._matrix = this._initialMatrix.clone().rotate(this._angle, origin).flip();
 
       this._update();
+
+      if (this.options.rotation && this._rotationIcon && this._rotationIcon.setLatLng) {
+        const latlng = new L.LatLng(pos.x, pos.y);
+
+        this._map.addLayer(this._rotationIcon);
+
+        this._rotationIcon.setLatLng(latlng);
+
+        this._rotationIcon.setStyle({
+          "z-index": 10000
+        });
+      }
 
       this._path.fire("rotate", {
         layer: this._path,
@@ -1509,7 +1540,12 @@
 
       var marker = evt.target;
       var map = this._map;
-      map.dragging.disable();
+
+      if (map.dragging.enabled()) {
+        map.dragging.disable();
+        this._mapDraggingWasEnabled = true;
+      }
+
       this._activeMarker = marker;
       this._originMarker = this._handlers[(marker.options.index + 2) % 4];
       this._scaleOrigin = this._originMarker.getLatLng();
@@ -1546,8 +1582,9 @@
 
       this._map.removeLayer(this._handleLine);
 
-      this._map.removeLayer(this._rotationMarker); //this._handleLine = this._rotationMarker = null;
+      this._map.removeLayer(this._rotationMarker);
 
+      this._map.removeLayer(this._rotationIcon);
     },
     _onScaleStandard: function (evt) {
       if (!this._path._map) {
@@ -1660,7 +1697,7 @@
      * @param  {Event} evt
      */
     _onScaleEnd: function (evt) {
-      if (this._map) {
+      if (this._map && this._mapDraggingWasEnabled) {
         this._map.dragging.enable();
       }
 
