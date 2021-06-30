@@ -1330,7 +1330,7 @@
       var bottom = new L.LatLng((latlngs[0].lat + latlngs[3].lat) / 2, (latlngs[0].lng + latlngs[3].lng) / 2); // hehe, top is a reserved word
 
       var topPoint = new L.LatLng((latlngs[1].lat + latlngs[2].lat) / 2, (latlngs[1].lng + latlngs[2].lng) / 2);
-      var handlerPosition = map.layerPointToLatLng(L.PathTransform.pointOnLine(map.latLngToLayerPoint(bottom), map.latLngToLayerPoint(topPoint), this.options.handleLength / 2));
+      var handlerPosition = map.layerPointToLatLng(L.PathTransform.pointOnLine(map.latLngToLayerPoint(bottom), map.latLngToLayerPoint(topPoint), this.options.handleLength));
       this._handleLine = new L.Polyline([topPoint, handlerPosition], this.options.rotateHandleOptions).addTo(this._handlersGroup);
       var RotateHandleClass = this.options.rotateHandleClass;
       this._rotationMarker = new RotateHandleClass(handlerPosition, this.options.handlerOptions).addTo(this._handlersGroup).on("mousedown", this._onRotateStart, this);

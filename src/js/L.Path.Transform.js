@@ -1440,7 +1440,7 @@ L.Handler.PathTransform = L.Handler.extend({
       L.PathTransform.pointOnLine(
         map.latLngToLayerPoint(bottom),
         map.latLngToLayerPoint(topPoint),
-        this.options.handleLength / 2
+        this.options.handleLength
       )
     );
 
