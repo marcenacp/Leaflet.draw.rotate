@@ -1434,9 +1434,11 @@
 
         this._rotationIcon.setLatLng(latlng);
 
-        this._rotationIcon.setStyle({
-          "z-index": 10000
-        });
+        if (this._rotationIcon.setStyle) {
+          this._rotationIcon.setStyle({
+            "z-index": 10000
+          });
+        }
       }
 
       this._path.fire("rotate", {

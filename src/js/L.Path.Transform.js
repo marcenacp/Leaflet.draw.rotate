@@ -1559,7 +1559,9 @@ L.Handler.PathTransform = L.Handler.extend({
       const latlng = new L.LatLng(pos.x, pos.y);
       this._map.addLayer(this._rotationIcon);
       this._rotationIcon.setLatLng(latlng);
-      this._rotationIcon.setStyle({ "z-index": 10000 });
+      if (this._rotationIcon.setStyle) {
+        this._rotationIcon.setStyle({ "z-index": 10000 });
+      }
     }
 
     this._path.fire("rotate", {
