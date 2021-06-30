@@ -208,8 +208,9 @@ L.Handler.PathDrag = L.Handler.extend(
 
       // skip taps
       if (evt.type === "touchmove" && !this._path._dragMoved) {
-        var totalMouseDragDistance =
-          this._dragStartPoint.distanceTo(containerPoint);
+        var totalMouseDragDistance = this._dragStartPoint.distanceTo(
+          containerPoint
+        );
         if (totalMouseDragDistance <= this._path._map.options.tapTolerance) {
           return;
         }
@@ -929,7 +930,7 @@ L.PathTransform.RotateHandle = L.PathTransform.Handle.extend({
   },
 
   onAdd: function (map) {
-    L.CircleMarker.prototype.onAdd.call(this, map);
+    L.Icon.prototype.onAdd.call(this, map);
     if (this._path && this.options.setCursor) {
       // SVG/VML
       this._path.style.cursor = "all-scroll";
@@ -978,6 +979,9 @@ L.Handler.PathTransform = L.Handler.extend({
 
     handleClass: L.PathTransform.Handle,
     rotateHandleClass: L.PathTransform.RotateHandle,
+    rotateHandlerOptions: {
+      iconUrl: "https://img.icons8.com/ios-filled/452/online--v1.png",
+    },
   },
 
   /**
@@ -1438,7 +1442,7 @@ L.Handler.PathTransform = L.Handler.extend({
     var RotateHandleClass = this.options.rotateHandleClass;
     this._rotationMarker = new RotateHandleClass(
       handlerPosition,
-      this.options.handlerOptions
+      this.options.rotateHandlerOptions
     )
       .addTo(this._handlersGroup)
       .on("mousedown", this._onRotateStart, this);
@@ -1605,7 +1609,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     var marker = evt.target;
     var map = this._map;
-    
+
     if (map.dragging.enabled()) {
       map.dragging.disable();
       this._mapDraggingWasEnabled = true;
@@ -1783,7 +1787,6 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map.addLayer(this._handleLine);
     this._map.addLayer(this._rotationMarker);
     this._makeHandlersApparent();
-
 
     this._apply();
     this._path.fire("scaleend", {

@@ -865,7 +865,7 @@
       className: "leaflet-editing-icon leaflet-div-icon transform-handler--rotate"
     },
     onAdd: function (map) {
-      L.CircleMarker.prototype.onAdd.call(this, map);
+      L.Icon.prototype.onAdd.call(this, map);
 
       if (this._path && this.options.setCursor) {
         // SVG/VML
@@ -909,7 +909,10 @@
       // maybe I'll add skewing in the future
       edgesCount: 4,
       handleClass: L.PathTransform.Handle,
-      rotateHandleClass: L.PathTransform.RotateHandle
+      rotateHandleClass: L.PathTransform.RotateHandle,
+      rotateHandlerOptions: {
+        iconUrl: "https://img.icons8.com/ios-filled/452/online--v1.png"
+      }
     },
 
     /**
@@ -1326,7 +1329,7 @@
       var handlerPosition = map.layerPointToLatLng(L.PathTransform.pointOnLine(map.latLngToLayerPoint(bottom), map.latLngToLayerPoint(topPoint), this.options.handleLength));
       this._handleLine = new L.Polyline([topPoint, handlerPosition], this.options.rotateHandleOptions).addTo(this._handlersGroup);
       var RotateHandleClass = this.options.rotateHandleClass;
-      this._rotationMarker = new RotateHandleClass(handlerPosition, this.options.handlerOptions).addTo(this._handlersGroup).on("mousedown", this._onRotateStart, this);
+      this._rotationMarker = new RotateHandleClass(handlerPosition, this.options.rotateHandlerOptions).addTo(this._handlersGroup).on("mousedown", this._onRotateStart, this);
       this._rotationOrigin = new L.LatLng((topPoint.lat + bottom.lat) / 2, (topPoint.lng + bottom.lng) / 2);
 
       this._handlers.push(this._rotationMarker);
@@ -1509,7 +1512,12 @@
 
       var marker = evt.target;
       var map = this._map;
-      map.dragging.disable();
+
+      if (map.dragging.enabled()) {
+        map.dragging.disable();
+        this._mapDraggingWasEnabled = true;
+      }
+
       this._activeMarker = marker;
       this._originMarker = this._handlers[(marker.options.index + 2) % 4];
       this._scaleOrigin = this._originMarker.getLatLng();
@@ -1660,7 +1668,7 @@
      * @param  {Event} evt
      */
     _onScaleEnd: function (evt) {
-      if (this._map) {
+      if (this._map && this._mapDraggingWasEnabled) {
         this._map.dragging.enable();
       }
 
