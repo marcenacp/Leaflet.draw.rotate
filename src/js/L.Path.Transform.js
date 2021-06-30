@@ -1468,6 +1468,7 @@ L.Handler.PathTransform = L.Handler.extend({
 </svg>`;
     const iconUrl = "data:image/svg+xml;base64," + btoa(svgTemplate);
     const arrowsIcon = L.icon({
+      iconSize: [20, 20],
       iconUrl: iconUrl,
     });
     if (arrowsIcon.setStyle) {
