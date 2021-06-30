@@ -1714,6 +1714,8 @@
       this._handlersGroup.eachLayer(function (layer) {
         if (layer.bringToFront) {
           layer.bringToFront();
+        } else {
+          console.log("no bringToFront", layer);
         }
       });
 

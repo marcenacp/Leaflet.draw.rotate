@@ -1818,6 +1818,8 @@ L.Handler.PathTransform = L.Handler.extend({
     this._handlersGroup.eachLayer(function (layer) {
       if (layer.bringToFront) {
         layer.bringToFront();
+      } else {
+        console.log("no bringToFront", layer);
       }
     });
     for (var i = 0, len = this._handlers.length; i < len; i++) {
