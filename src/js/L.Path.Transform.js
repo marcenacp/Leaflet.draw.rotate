@@ -1458,7 +1458,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     const svgTemplate = `
     <svg version="1.1" id="arrows-icon" class="dummy4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="64px" height="64px" viewBox="0 0 64 64" enable-background="new 0 0 64 64" xml:space="preserve">
+	 width="20px" height="20px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve">
 <g>
 	<path d="M33,2c7.746,0,15.028,3.017,20.505,8.494c10.138,10.137,11.31,26.396,2.74,37.849L52,52.589V44h-2v11l1,1h11v-2h-8.582
 		l4.292-4.293l0.092-0.106c9.211-12.247,7.972-29.667-2.883-40.521C49.064,3.225,41.28,0,33,0V2z"/>
