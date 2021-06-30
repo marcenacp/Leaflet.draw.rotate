@@ -1816,7 +1816,9 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _cachePoints: function () {
     this._handlersGroup.eachLayer(function (layer) {
-      layer.bringToFront();
+      if (layer.bringToFront) {
+        layer.bringToFront();
+      }
     });
     for (var i = 0, len = this._handlers.length; i < len; i++) {
       var handler = this._handlers[i];
