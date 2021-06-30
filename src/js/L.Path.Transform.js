@@ -1824,7 +1824,9 @@ L.Handler.PathTransform = L.Handler.extend({
     });
     for (var i = 0, len = this._handlers.length; i < len; i++) {
       var handler = this._handlers[i];
-      handler._initialPoint = handler._point.clone();
+      if (handler._point) {
+        handler._initialPoint = handler._point.clone();
+      }
     }
   },
 
