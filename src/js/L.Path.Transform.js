@@ -208,8 +208,9 @@ L.Handler.PathDrag = L.Handler.extend(
 
       // skip taps
       if (evt.type === "touchmove" && !this._path._dragMoved) {
-        var totalMouseDragDistance =
-          this._dragStartPoint.distanceTo(containerPoint);
+        var totalMouseDragDistance = this._dragStartPoint.distanceTo(
+          containerPoint
+        );
         if (totalMouseDragDistance <= this._path._map.options.tapTolerance) {
           return;
         }
@@ -1015,6 +1016,7 @@ L.Handler.PathTransform = L.Handler.extend({
     this._rect = null;
     this._handlers = [];
     this._handleLine = null;
+    this._rotationIcon = null;
   },
 
   /**
@@ -1134,6 +1136,13 @@ L.Handler.PathTransform = L.Handler.extend({
       rotationOrigin,
       scaleOrigin
     );
+    this._transformPoints(
+      this._rotationIcon,
+      angle,
+      scale,
+      rotationOrigin,
+      scaleOrigin
+    );
     this._updateHandlers();
     return this;
   },
@@ -1237,11 +1246,15 @@ L.Handler.PathTransform = L.Handler.extend({
       this._handlersGroup.removeLayer(this._handleLine);
     }
 
+    if (this._rotationIcon) {
+      this._handlersGroup.removeLayer(this._rotationIcon);
+    }
+
     if (this._rotationMarker) {
       this._handlersGroup.removeLayer(this._rotationMarker);
     }
 
-    this._handleLine = this._rotationMarker = null;
+    this._handleLine = this._rotationMarker = this._rotationIcon = null;
 
     for (var i = this._handlers.length - 1; i >= 0; i--) {
       handlersGroup.removeLayer(this._handlers[i]);
@@ -1427,7 +1440,7 @@ L.Handler.PathTransform = L.Handler.extend({
       L.PathTransform.pointOnLine(
         map.latLngToLayerPoint(bottom),
         map.latLngToLayerPoint(topPoint),
-        this.options.handleLength
+        this.options.handleLength / 2
       )
     );
 
@@ -1442,6 +1455,34 @@ L.Handler.PathTransform = L.Handler.extend({
     )
       .addTo(this._handlersGroup)
       .on("mousedown", this._onRotateStart, this);
+
+    const svgTemplate = `
+    <svg version="1.1" id="arrows-icon" class="dummy4" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="64px" height="64px" viewBox="0 0 64 64" enable-background="new 0 0 64 64" xml:space="preserve">
+<g>
+	<path d="M33,2c7.746,0,15.028,3.017,20.505,8.494c10.138,10.137,11.31,26.396,2.74,37.849L52,52.589V44h-2v11l1,1h11v-2h-8.582
+		l4.292-4.293l0.092-0.106c9.211-12.247,7.972-29.667-2.883-40.521C49.064,3.225,41.28,0,33,0V2z"/>
+	<path d="M7.755,15.657L12,11.411V20h2V9l-1-1H2v2h8.582L6.29,14.293l-0.092,0.106C-3.013,26.646-1.773,44.066,9.081,54.92
+		C14.936,60.775,22.72,64,31,64v-2c-7.746,0-15.028-3.017-20.505-8.494C0.357,43.369-0.814,27.11,7.755,15.657z"/>
+</g>
+</svg>`;
+
+    const arrowsIcon = new L.divIcon({
+      html: svgTemplate,
+      className: "dummy2",
+    });
+    if (arrowsIcon.setStyle) {
+      arrowsIcon.setStyle({ "z-index": 1000 });
+      arrowsIcon.setStyle({ cursor: "all-scroll" });
+    }
+    this._rotationIcon = new L.marker(handlerPosition)
+      .setIcon(arrowsIcon)
+      .addTo(this._handlersGroup)
+      .on("mousedown", this._onRotateStart, this);
+    if (this._rotationIcon.setStyle) {
+      this._rotationIcon.setStyle({ "z-index": 1000 });
+      this._rotationIcon.setStyle({ cursor: "all-scroll" });
+    }
 
     this._rotationOrigin = new L.LatLng(
       (topPoint.lat + bottom.lat) / 2,
@@ -1509,7 +1550,22 @@ L.Handler.PathTransform = L.Handler.extend({
       .flip();
 
     this._update();
-    this._path.fire("rotate", { layer: this._path, rotation: this._angle });
+
+    if (
+      this.options.rotation &&
+      this._rotationIcon &&
+      this._rotationIcon.setLatLng
+    ) {
+      const latlng = new L.LatLng(pos.x, pos.y);
+      this._map.addLayer(this._rotationIcon);
+      this._rotationIcon.setLatLng(latlng);
+      this._rotationIcon.setStyle({ "z-index": 10000 });
+    }
+
+    this._path.fire("rotate", {
+      layer: this._path,
+      rotation: this._angle,
+    });
   },
 
   /**
@@ -1605,7 +1661,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     var marker = evt.target;
     var map = this._map;
-    
+
     if (map.dragging.enabled()) {
       map.dragging.disable();
       this._mapDraggingWasEnabled = true;
@@ -1651,7 +1707,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._map.removeLayer(this._handleLine);
     this._map.removeLayer(this._rotationMarker);
-    //this._handleLine = this._rotationMarker = null;
+    this._map.removeLayer(this._rotationIcon);
   },
 
   _onScaleStandard: function (evt) {
@@ -1782,8 +1838,8 @@ L.Handler.PathTransform = L.Handler.extend({
 
     this._map.addLayer(this._handleLine);
     this._map.addLayer(this._rotationMarker);
+    this._map.addLayer(this._rotationIcon);
     this._makeHandlersApparent();
-
 
     this._apply();
     this._path.fire("scaleend", {
@@ -1797,7 +1853,9 @@ L.Handler.PathTransform = L.Handler.extend({
    */
   _cachePoints: function () {
     this._handlersGroup.eachLayer(function (layer) {
-      layer.bringToFront();
+      if (layer && layer.bringToFront) {
+        layer.bringToFront();
+      }
     });
     for (var i = 0, len = this._handlers.length; i < len; i++) {
       var handler = this._handlers[i];
