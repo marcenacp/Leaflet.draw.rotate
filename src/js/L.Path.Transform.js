@@ -160,8 +160,10 @@ L.Handler.PathDrag = L.Handler.extend(
         : evt.originalEvent.type;
 
       this._mapDraggingWasEnabled = false;
-      this._startPoint = evt.containerPoint.clone();
-      this._dragStartPoint = evt.containerPoint.clone();
+      if (evt.containerPoint) {
+        this._startPoint = evt.containerPoint.clone();
+        this._dragStartPoint = evt.containerPoint.clone();
+      }
       this._matrix = [1, 0, 0, 1, 0, 0];
       L.DomEvent.stop(evt.originalEvent);
 
@@ -704,7 +706,9 @@ L.Matrix.prototype = {
    * @return {L.Point}
    */
   transform: function (point) {
-    return this._transform(point.clone());
+    if (point) {
+      return this._transform(point.clone());
+    }
   },
 
   /**

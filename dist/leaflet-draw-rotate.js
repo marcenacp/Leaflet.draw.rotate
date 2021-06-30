@@ -155,8 +155,12 @@
 
       var eventType = evt.originalEvent._simulated ? "touchstart" : evt.originalEvent.type;
       this._mapDraggingWasEnabled = false;
-      this._startPoint = evt.containerPoint.clone();
-      this._dragStartPoint = evt.containerPoint.clone();
+
+      if (evt.containerPoint) {
+        this._startPoint = evt.containerPoint.clone();
+        this._dragStartPoint = evt.containerPoint.clone();
+      }
+
       this._matrix = [1, 0, 0, 1, 0, 0];
       L.DomEvent.stop(evt.originalEvent);
       L.DomUtil.addClass(this._path._renderer._container, "leaflet-interactive");
@@ -686,7 +690,9 @@
      * @return {L.Point}
      */
     transform: function (point) {
-      return this._transform(point.clone());
+      if (point) {
+        return this._transform(point.clone());
+      }
     },
 
     /**
