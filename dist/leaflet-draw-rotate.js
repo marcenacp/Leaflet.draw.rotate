@@ -851,6 +851,24 @@
     }
   });
   /**
+   * Marker handler
+   * @extends {L.Marker}
+   */
+
+  L.PathTransform.HandleRotation = L.Marker.extend({
+    options: {
+      className: "leaflet-editing-icon leaflet-div-icon"
+    },
+    onAdd: function (map) {
+      L.Marker.prototype.onAdd.call(this, map);
+
+      if (this._path && this.options.setCursor) {
+        // SVG/VML
+        this._path.style.cursor = L.PathTransform.Handle.CursorsByType[this.options.index];
+      }
+    }
+  });
+  /**
    * @const
    * @type {Array}
    */
@@ -860,12 +878,12 @@
    * @extends {L.Handler.PathTransform.Handle}
    */
 
-  L.PathTransform.RotateHandle = L.PathTransform.Handle.extend({
+  L.PathTransform.RotateHandle = L.PathTransform.HandleRotation.extend({
     options: {
       className: "leaflet-editing-icon leaflet-div-icon transform-handler--rotate"
     },
     onAdd: function (map) {
-      L.CircleMarker.prototype.onAdd.call(this, map);
+      L.Marker.prototype.onAdd.call(this, map);
 
       if (this._path && this.options.setCursor) {
         // SVG/VML
@@ -1509,7 +1527,12 @@
 
       var marker = evt.target;
       var map = this._map;
-      map.dragging.disable();
+
+      if (map.dragging.enabled()) {
+        map.dragging.disable();
+        this._mapDraggingWasEnabled = true;
+      }
+
       this._activeMarker = marker;
       this._originMarker = this._handlers[(marker.options.index + 2) % 4];
       this._scaleOrigin = this._originMarker.getLatLng();
@@ -1660,7 +1683,7 @@
      * @param  {Event} evt
      */
     _onScaleEnd: function (evt) {
-      if (this._map) {
+      if (this._map && this._mapDraggingWasEnabled) {
         this._map.dragging.enable();
       }
 

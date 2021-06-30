@@ -208,8 +208,9 @@ L.Handler.PathDrag = L.Handler.extend(
 
       // skip taps
       if (evt.type === "touchmove" && !this._path._dragMoved) {
-        var totalMouseDragDistance =
-          this._dragStartPoint.distanceTo(containerPoint);
+        var totalMouseDragDistance = this._dragStartPoint.distanceTo(
+          containerPoint
+        );
         if (totalMouseDragDistance <= this._path._map.options.tapTolerance) {
           return;
         }
@@ -909,6 +910,25 @@ L.PathTransform.Handle = L.CircleMarker.extend({
 });
 
 /**
+ * Marker handler
+ * @extends {L.Marker}
+ */
+L.PathTransform.HandleRotation = L.Marker.extend({
+  options: {
+    className: "leaflet-editing-icon leaflet-div-icon",
+  },
+
+  onAdd: function (map) {
+    L.Marker.prototype.onAdd.call(this, map);
+    if (this._path && this.options.setCursor) {
+      // SVG/VML
+      this._path.style.cursor =
+        L.PathTransform.Handle.CursorsByType[this.options.index];
+    }
+  },
+});
+
+/**
  * @const
  * @type {Array}
  */
@@ -922,14 +942,14 @@ L.PathTransform.Handle.CursorsByType = [
 /**
  * @extends {L.Handler.PathTransform.Handle}
  */
-L.PathTransform.RotateHandle = L.PathTransform.Handle.extend({
+L.PathTransform.RotateHandle = L.PathTransform.HandleRotation.extend({
   options: {
     className:
       "leaflet-editing-icon leaflet-div-icon transform-handler--rotate",
   },
 
   onAdd: function (map) {
-    L.CircleMarker.prototype.onAdd.call(this, map);
+    L.Marker.prototype.onAdd.call(this, map);
     if (this._path && this.options.setCursor) {
       // SVG/VML
       this._path.style.cursor = "all-scroll";
@@ -1605,7 +1625,7 @@ L.Handler.PathTransform = L.Handler.extend({
 
     var marker = evt.target;
     var map = this._map;
-    
+
     if (map.dragging.enabled()) {
       map.dragging.disable();
       this._mapDraggingWasEnabled = true;
@@ -1783,7 +1803,6 @@ L.Handler.PathTransform = L.Handler.extend({
     this._map.addLayer(this._handleLine);
     this._map.addLayer(this._rotationMarker);
     this._makeHandlersApparent();
-
 
     this._apply();
     this._path.fire("scaleend", {
